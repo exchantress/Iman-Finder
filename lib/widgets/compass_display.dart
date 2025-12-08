@@ -37,7 +37,11 @@ class CompassDisplay extends StatelessWidget {
               child: _CompassBackground(),
             ),
           ),
-
+          Positioned(
+            left: 160 + (120 * sin((qiblaDirection - heading) * pi / 180)) - 20,
+            top: 160 - (120 * cos((qiblaDirection - heading) * pi / 180)) - 20,
+            child: Image.asset('assets/kabah.png', width: 40, height: 40),
+          ),
           // panah kiblat (diputar sesuai qiblaRotation)
           Transform.rotate(
             angle: qiblaRotation,

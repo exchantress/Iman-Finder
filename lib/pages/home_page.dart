@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          side: const BorderSide(color: Colors.white, width: 2),
+          side: const BorderSide(color: Colors.white, width: 3),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -47,7 +47,9 @@ class HomePage extends StatelessWidget {
           // blur layer untuk efek
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-            child: Container(color: Colors.black.withOpacity(0.2)),
+            child: Container(
+              color: const Color.fromARGB(255, 230, 230, 230).withOpacity(0.2),
+            ),
           ),
 
           // konten utama
@@ -58,7 +60,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   const SizedBox(height: 20),
                   // logo default (ganti nanti dengan asset Anda)
-                  const FlutterLogo(size: 120),
+                  Image.asset('assets/logo.png', width: 300, height: 300),
                   const SizedBox(height: 36),
 
                   _menuButton(context, 'COMPASS ARAH KIBLAT', () {
