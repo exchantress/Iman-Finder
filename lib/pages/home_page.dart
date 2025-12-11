@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'qibla_page.dart';
+import '../services/ramadan_service.dart';
+import 'ramadan_countdown.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -74,8 +76,8 @@ class HomePage extends StatelessWidget {
                     _showComingSoon(context);
                   }),
 
-                  _menuButton(context, 'RAMADHAN COUNTDOWN', () {
-                    _showComingSoon(context);
+                  _menuButton(context, 'RAMADHAN COUNTDOWN', () async {
+                    await _openRamadhanCountdown(context);
                   }),
 
                   _menuButton(context, 'KALENDER ISLAM', () {
@@ -105,6 +107,50 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+Future<void> _openRamadhanCountdown(BuildContext ctx) async {
+  final now = DateTime.now();
+  final yearsToCheck = [now.year, now.year + 1];
+  showDialog(
+    context: ctx,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+  try {
+    DateTime? dt;
+    for (final y in yearsToCheck) {
+      dt = await RamadanService.fetchRamadanStartByCity(
+        y,
+        'Jakarta',
+        'Indonesia',
+        method: 4,
+      );
+      if (dt != null) break;
+    }
+    Navigator.pop(ctx); // close loader
+    if (dt != null) {
+      Navigator.push(
+        ctx,
+        MaterialPageRoute(
+          builder: (_) =>
+              RamadanCountdownPage(getRamadanStart: () async => dt!),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tanggal 1 Ramadhan tidak ditemukan untuk rentang pengecekan.',
+          ),
+        ),
+      );
+    }
+  } catch (e) {
+    Navigator.pop(ctx);
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(content: Text('Gagal mengambil tanggal Ramadhan: $e')),
     );
   }
 }

@@ -32,8 +32,10 @@ dependencies:
     sdk: flutter
 
   geolocator: ^11.0.0
-  flutter_compass: ^0.7.0
+  flutter_compass: ^0.8.0
   http: ^1.2.0
+  intl: ^0.18.0
+  
 
 dev_dependencies:
   flutter_test:
