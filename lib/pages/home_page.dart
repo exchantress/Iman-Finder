@@ -1,9 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:qiblah_finder/pages/hijri_calendar.dart';
 import 'qibla_page.dart';
 import '../services/ramadan_service.dart';
 import 'ramadan_countdown.dart';
+import 'asmaul_page.dart'; // Sesuaikan pathnya
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -112,7 +112,14 @@ class HomePage extends StatelessWidget {
                     title: 'Asmaul Husna',
                     subtitle: '99 Nama Allah',
                     icon: Icons.menu_book_rounded,
-                    onTap: () => _showComingSoon(context),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AsmaulHusnaPage(),
+                        ),
+                      );
+                    },
                   ),
 
                   _buildMenuCard(
