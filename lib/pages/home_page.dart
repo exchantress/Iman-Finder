@@ -7,84 +7,135 @@ import 'ramadan_countdown.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  Widget _menuButton(BuildContext ctx, String text, VoidCallback onTap) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 32),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          side: const BorderSide(color: Colors.white, width: 3),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: onTap,
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 18, color: Colors.white),
-        ),
-      ),
-    );
-  }
+  // Palet Warna
+  final Color _primaryPurple = const Color(0xFF6C1B9B); // Ungu gelap
+  final Color _accentPurple = const Color(0xFFAB47BC); // Ungu terang
+  final Color _bgDark = const Color(0xFF0F0F0F); // Hitam pekat
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // background: pakai gradien + blur supaya mirip foto blur di gambar Anda
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
+          // 1. Background Gradient (Hitam ke Ungu)
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF22303F), Color(0xFF0F1720)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                colors: [_bgDark, const Color(0xFF2A0E36), _bgDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: const [0.0, 0.5, 1.0],
               ),
             ),
           ),
 
-          // blur layer untuk efek
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+          // 2. Ornamen visual (Lingkaran cahaya ungu pudar di pojok)
+          Positioned(
+            top: -100,
+            right: -100,
             child: Container(
-              color: const Color.fromARGB(255, 230, 230, 230).withOpacity(0.2),
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _primaryPurple.withOpacity(0.3),
+                boxShadow: [
+                  BoxShadow(
+                    color: _primaryPurple.withOpacity(0.4),
+                    blurRadius: 100,
+                    spreadRadius: 20,
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // konten utama
+          // 3. Konten Utama
           SafeArea(
-            child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-                  // logo default (ganti nanti dengan asset Anda)
-                  Image.asset('assets/logo.png', width: 300, height: 300),
-                  const SizedBox(height: 36),
 
-                  _menuButton(context, 'COMPASS ARAH KIBLAT', () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const QiblaPage()),
-                    );
-                  }),
+                  // Logo dengan efek shadow agar pop-out
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryPurple.withOpacity(0.2),
+                          blurRadius: 40,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 180, // Ukuran disesuaikan agar proporsional
+                      height: 180,
+                    ),
+                  ),
 
-                  _menuButton(context, 'ASMAUL HUSNA', () {
-                    _showComingSoon(context);
-                  }),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "ISLAMIC TOOLS",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
 
-                  _menuButton(context, 'RAMADHAN COUNTDOWN', () async {
-                    await _openRamadhanCountdown(context);
-                  }),
+                  // Daftar Menu
+                  _buildMenuCard(
+                    context,
+                    title: 'Arah Kiblat',
+                    subtitle: 'Kompas penunjuk Ka\'bah',
+                    icon: Icons.explore_outlined,
+                    isHighlight: true,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const QiblaPage()),
+                      );
+                    },
+                  ),
 
-                  _menuButton(context, 'KALENDER ISLAM', () {
-                    _showComingSoon(context);
-                  }),
+                  _buildMenuCard(
+                    context,
+                    title: 'Asmaul Husna',
+                    subtitle: '99 Nama Allah',
+                    icon: Icons.menu_book_rounded,
+                    onTap: () => _showComingSoon(context),
+                  ),
+
+                  _buildMenuCard(
+                    context,
+                    title: 'Ramadhan Countdown',
+                    subtitle: 'Hitung mundur bulan suci',
+                    icon: Icons.nights_stay_outlined,
+                    onTap: () => _openRamadhanCountdown(context),
+                  ),
+
+                  _buildMenuCard(
+                    context,
+                    title: 'Kalender Islam',
+                    subtitle: 'Hijriyah & Masehi',
+                    icon: Icons.calendar_month_outlined,
+                    onTap: () => _showComingSoon(context),
+                  ),
 
                   const SizedBox(height: 30),
+
+                  Text(
+                    "v1.0.0",
+                    style: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  ),
                 ],
               ),
             ),
@@ -94,16 +145,117 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  // Widget Button Custom (Glassmorphism Style)
+  Widget _buildMenuCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isHighlight = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        // Efek gradient halus pada tombol
+        gradient: LinearGradient(
+          colors: isHighlight
+              ? [_primaryPurple, _accentPurple]
+              : [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(isHighlight ? 0.5 : 0.1),
+          width: 1,
+        ),
+        boxShadow: isHighlight
+            ? [
+                BoxShadow(
+                  color: _primaryPurple.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          highlightColor: _accentPurple.withOpacity(0.2),
+          splashColor: _primaryPurple.withOpacity(0.3),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                // Icon Box
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+
+                // Text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Arrow Icon
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showComingSoon(BuildContext ctx) {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Coming Soon'),
-        content: const Text('Fitur ini akan tersedia di rilis selanjutnya.'),
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Coming Soon', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Fitur ini akan tersedia di rilis selanjutnya.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
+            child: Text('OK', style: TextStyle(color: _accentPurple)),
           ),
         ],
       ),
@@ -111,13 +263,27 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Logic dipisah agar lebih rapi (dan perbaikan async gap)
 Future<void> _openRamadhanCountdown(BuildContext ctx) async {
   final now = DateTime.now();
   final yearsToCheck = [now.year, now.year + 1];
+
+  // Tampilkan Loading
   showDialog(
     context: ctx,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
+    barrierDismissible: false,
+    builder: (_) => Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const CircularProgressIndicator(color: Colors.purpleAccent),
+      ),
+    ),
   );
+
   try {
     DateTime? dt;
     for (final y in yearsToCheck) {
@@ -129,7 +295,12 @@ Future<void> _openRamadhanCountdown(BuildContext ctx) async {
       );
       if (dt != null) break;
     }
+
+    // Cek apakah widget masih aktif sebelum melakukan navigasi
+    if (!ctx.mounted) return;
+
     Navigator.pop(ctx); // close loader
+
     if (dt != null) {
       Navigator.push(
         ctx,
@@ -141,16 +312,23 @@ Future<void> _openRamadhanCountdown(BuildContext ctx) async {
     } else {
       ScaffoldMessenger.of(ctx).showSnackBar(
         const SnackBar(
+          backgroundColor: Colors.redAccent,
           content: Text(
             'Tanggal 1 Ramadhan tidak ditemukan untuk rentang pengecekan.',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
     }
   } catch (e) {
-    Navigator.pop(ctx);
+    if (!ctx.mounted) return;
+    Navigator.pop(ctx); // close loader jika error
+
     ScaffoldMessenger.of(ctx).showSnackBar(
-      SnackBar(content: Text('Gagal mengambil tanggal Ramadhan: $e')),
+      SnackBar(
+        backgroundColor: Colors.redAccent,
+        content: Text('Gagal mengambil data: $e'),
+      ),
     );
   }
 }

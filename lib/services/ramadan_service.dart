@@ -5,9 +5,6 @@ import 'package:http/http.dart' as http;
 class RamadanService {
   static const _base = 'https://api.aladhan.com/v1';
 
-  // =========================================================================
-  //  🔵 NEW: Ambil kalender Hijri langsung (bulan 9 = Ramadhan)
-  // =========================================================================
   static Future<DateTime?> _fetchRamadanHijriByCity(
     int hijriYear,
     String city,
@@ -55,17 +52,11 @@ class RamadanService {
     return DateTime(year, month, day);
   }
 
-  // =========================================================================
-  //  🔵 Helper: Estimasi tahun Hijriah (cukup akurat untuk navigasi API)
-  // =========================================================================
   static int estimateHijriYear() {
     final now = DateTime.now();
     return now.year - 579; // Konversi kasar awal Hijri
   }
 
-  // =========================================================================
-  //  🔵 PUBLIC: Mendapatkan tanggal Ramadhan berikutnya (Hijri → Gregorian)
-  // =========================================================================
   static Future<DateTime?> fetchRamadanStartByCity(
     int _unusedGregorianYear, // tetap ada agar kompatibel dengan kode Anda
     String city,
@@ -99,9 +90,6 @@ class RamadanService {
     );
   }
 
-  // =========================================================================
-  //  🔵 Versi Koordinat (opsional kalau Anda butuh)
-  // =========================================================================
   static Future<DateTime?> fetchRamadanStartByCoords(
     int year,
     double lat,

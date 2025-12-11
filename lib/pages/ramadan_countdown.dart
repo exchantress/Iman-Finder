@@ -1,11 +1,9 @@
-// lib/pages/ramadan_countdown.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class RamadanCountdownPage extends StatefulWidget {
   final Future<DateTime> Function() getRamadanStart;
-
   const RamadanCountdownPage({super.key, required this.getRamadanStart});
 
   @override
@@ -13,16 +11,15 @@ class RamadanCountdownPage extends StatefulWidget {
 }
 
 class _RamadanCountdownPageState extends State<RamadanCountdownPage> {
-  DateTime? _startDate;
-  Timer? _timer;
+  DateTime? _targetDate;
   Duration _remaining = Duration.zero;
-  bool _loading = true;
-  String? _error;
+  Timer? _timer;
+  bool _isLoading = true; // State untuk loading
 
   @override
   void initState() {
     super.initState();
-    _loadStartDate();
+    _loadDate();
   }
 
   @override
@@ -31,144 +28,149 @@ class _RamadanCountdownPageState extends State<RamadanCountdownPage> {
     super.dispose();
   }
 
-  Future<void> _loadStartDate() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
+  Future<void> _loadDate() async {
     try {
+      // Simulasi delay sedikit agar loading spinner terlihat (opsional)
+      // await Future.delayed(const Duration(seconds: 1));
+
       final dt = await widget.getRamadanStart();
-      final local = DateTime(dt.year, dt.month, dt.day, 0, 0, 0);
+
+      if (!mounted) return;
+
       setState(() {
-        _startDate = local;
+        _targetDate = DateTime(dt.year, dt.month, dt.day);
+        _isLoading = false; // Matikan loading setelah data dapat
       });
+
       _startTimer();
-    } catch (e) {
-      setState(() {
-        _error = 'Gagal mengambil tanggal Ramadhan: $e';
-      });
-    } finally {
-      setState(() {
-        _loading = false;
-      });
+    } catch (_) {
+      // Jika error, matikan loading agar tidak stuck
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _startTimer() {
-    _timer?.cancel();
-    if (_startDate == null) return;
-    _updateRemaining();
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => _updateRemaining(),
-    );
+    // Jalankan sekali di awal untuk menghindari delay 1 detik pertama
+    _updateTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
   }
 
-  void _updateRemaining() {
-    if (_startDate == null) return;
-    final now = DateTime.now();
-    final remaining = _startDate!.difference(now);
-    setState(() {
-      _remaining = remaining.isNegative ? Duration.zero : remaining;
-    });
-  }
-
-  String _formattedDuration(Duration d) {
-    final days = d.inDays;
-    final hours = d.inHours.remainder(24);
-    final minutes = d.inMinutes.remainder(60);
-    final seconds = d.inSeconds.remainder(60);
-    return '$days hari  ${_two(hours)}:${_two(minutes)}:${_two(seconds)}';
-  }
-
-  String _two(int v) => v.toString().padLeft(2, '0');
-
-  double _progressPercent() {
-    if (_startDate == null) return 0.0;
-    final baseline = _startDate!.subtract(const Duration(days: 365));
-    final total = _startDate!.difference(baseline).inSeconds;
-    final elapsed = DateTime.now().difference(baseline).inSeconds;
-    if (total <= 0) return 1.0;
-    final pct = elapsed / total;
-    return pct.clamp(0.0, 1.0);
+  void _updateTime() {
+    if (_targetDate == null || !mounted) return;
+    final diff = _targetDate!.difference(DateTime.now());
+    setState(() => _remaining = diff.isNegative ? Duration.zero : diff);
   }
 
   @override
   Widget build(BuildContext context) {
-    final df = DateFormat.yMMMMd();
+    // Format tanggal
+    final dateStr = _targetDate != null
+        ? DateFormat.yMMMMd().format(_targetDate!)
+        : '-';
+
+    // Format waktu
+    final days = _remaining.inDays;
+    final h = _remaining.inHours.remainder(24).toString().padLeft(2, '0');
+    final m = _remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Ramadhan Countdown')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  if (_startDate != null) ...[
-                    Text(
-                      'Ramadhan dimulai pada:',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      df.format(_startDate!),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Sisa waktu',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _formattedDuration(_remaining),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            LinearProgressIndicator(
-                              value: _progressPercent(),
-                              minHeight: 10,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${(_progressPercent() * 100).toStringAsFixed(0)}% menuju Ramadhan',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await _loadStartDate();
-                      },
-                      child: const Text('Refresh tanggal Ramadhan'),
-                    ),
-                  ] else
-                    const Text('Tanggal Ramadhan belum tersedia'),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const BackButton(color: Colors.white),
+      ),
+      body: Stack(
+        children: [
+          // 1. Background (Tetap muncul saat loading)
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0F0F0F),
+                  Color(0xFF2A0E36),
+                  Color(0xFF0F0F0F),
                 ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
+          ),
+
+          // 2. Logic Tampilan: Loading Spinner VS Content
+          Center(
+            child: _isLoading
+                ? const CircularProgressIndicator(
+                    color: Color(0xFFAB47BC), // Warna Ungu
+                  )
+                : Container(
+                    margin: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 40,
+                      horizontal: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6C1B9B).withOpacity(0.2),
+                          blurRadius: 50,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.nights_stay,
+                          size: 50,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "MENUJU RAMADHAN",
+                          style: TextStyle(
+                            color: Colors.white54,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          dateStr,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+
+                        // Countdown
+                        Text(
+                          "$days HARI",
+                          style: const TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          "$h : $m : $s",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontFamily: 'monospace',
+                            color: Color(0xFFAB47BC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
