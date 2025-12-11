@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:qiblah_finder/pages/hijri_calendar.dart';
 import 'qibla_page.dart';
 import '../services/ramadan_service.dart';
 import 'ramadan_countdown.dart';
@@ -122,12 +123,15 @@ class HomePage extends StatelessWidget {
                     onTap: () => _openRamadhanCountdown(context),
                   ),
 
+                  // --- BAGIAN INI DIUBAH ---
                   _buildMenuCard(
                     context,
                     title: 'Kalender Islam',
                     subtitle: 'Hijriyah & Masehi',
                     icon: Icons.calendar_month_outlined,
-                    onTap: () => _showComingSoon(context),
+                    onTap: () => _openIslamicCalendar(
+                      context,
+                    ), // 2. Panggil fungsi navigasi baru
                   ),
 
                   const SizedBox(height: 30),
@@ -238,6 +242,13 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _openIslamicCalendar(BuildContext ctx) {
+    Navigator.push(
+      ctx,
+      MaterialPageRoute(builder: (_) => const KalenderIslamPage()),
     );
   }
 
