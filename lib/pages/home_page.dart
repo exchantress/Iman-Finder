@@ -4,6 +4,7 @@ import 'qibla_page.dart';
 import '../services/ramadan_service.dart';
 import 'ramadan_countdown.dart';
 import 'asmaul_page.dart'; // Sesuaikan pathnya
+import 'prayer_times_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -103,6 +104,21 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const QiblaPage()),
+                      );
+                    },
+                  ),
+
+                  _buildMenuCard(
+                    context,
+                    title: 'Jadwal Sholat',
+                    subtitle: 'Waktu sholat berdasarkan lokasi',
+                    icon: Icons.mosque_outlined, 
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrayerTimesPage(),
+                        ),
                       );
                     },
                   ),
