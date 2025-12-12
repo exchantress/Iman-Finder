@@ -1,38 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-// 1. IMPORT PENTING: Untuk inisialisasi format tanggal
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:qiblah_finder/Model/hijri_model.dart';
+import '../services/hijri_service.dart';
 
-// --- 1. MODEL DATA ---
-class HijriDate {
-  final String gregorianDate;
-  final String hijriDate;
-  final String hijriMonth;
-  final String hijriYear;
-  final String weekdayEn;
-
-  HijriDate({
-    required this.gregorianDate,
-    required this.hijriDate,
-    required this.hijriMonth,
-    required this.hijriYear,
-    required this.weekdayEn,
-  });
-
-  factory HijriDate.fromJson(Map<String, dynamic> json) {
-    return HijriDate(
-      gregorianDate: json['gregorian']['date'],
-      hijriDate: json['hijri']['day'],
-      hijriMonth: json['hijri']['month']['en'],
-      hijriYear: json['hijri']['year'],
-      weekdayEn: json['gregorian']['weekday']['en'],
-    );
-  }
-}
-
-// --- 2. HALAMAN KALENDER (UI + LOGIC) ---
 class KalenderIslamPage extends StatefulWidget {
   const KalenderIslamPage({super.key});
 
@@ -41,18 +12,17 @@ class KalenderIslamPage extends StatefulWidget {
 }
 
 class _KalenderIslamPageState extends State<KalenderIslamPage> {
+  final HijriService _hijriService = HijriService();
+
   DateTime _currentDate = DateTime.now();
   List<HijriDate> _calendarData = [];
   bool _isLoading = true;
   String _errorMessage = '';
-
-  // 2. STATE BARU: Untuk mengecek apakah bahasa sudah siap
   bool _isLocaleReady = false;
 
   @override
   void initState() {
     super.initState();
-    // 3. INISIALISASI LOCALE DULU SEBELUM AMBIL DATA
     initializeDateFormatting('id_ID', null).then((_) {
       if (mounted) {
         setState(() {
@@ -72,38 +42,23 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
   }
 
   Future<void> _fetchCalendarData() async {
-    final month = _currentDate.month;
-    final year = _currentDate.year;
-    final url = Uri.parse(
-      'https://api.aladhan.com/v1/gToHCalendar/$month/$year',
-    );
-
     try {
-      final response = await http.get(url);
+      final data = await _hijriService.getCalendarData(
+        _currentDate.month,
+        _currentDate.year,
+      );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        final List<dynamic> data = jsonResponse['data'];
-
-        if (mounted) {
-          setState(() {
-            _calendarData = data.map((e) => HijriDate.fromJson(e)).toList();
-            _isLoading = false;
-            _errorMessage = '';
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Gagal memuat data. Kode: ${response.statusCode}';
-            _isLoading = false;
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _calendarData = data;
+          _isLoading = false;
+          _errorMessage = '';
+        });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Terjadi kesalahan koneksi.';
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
           _isLoading = false;
         });
       }
@@ -139,8 +94,6 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
     final Color backgroundColor = const Color(0xFF1E1E2C);
     final Color cardColor = const Color(0xFF2D2D44);
 
-    // 4. CEK LOCALE: Tampilkan loading jika bahasa belum siap
-    // Ini mencegah error "Locale data has not been initialized" saat render pertama
     if (!_isLocaleReady) {
       return Scaffold(
         backgroundColor: backgroundColor,
@@ -173,7 +126,6 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
       ),
       body: Column(
         children: [
-          // HEADER: NAVIGASI BULAN
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Row(
@@ -189,8 +141,6 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
                 ),
                 Column(
                   children: [
-                    // Di sini error sebelumnya terjadi karena 'id_ID' belum siap
-                    // Sekarang aman karena sudah dicek di awal
                     Text(
                       DateFormat('MMMM yyyy', 'id_ID').format(_currentDate),
                       style: const TextStyle(
@@ -218,7 +168,6 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
             ),
           ),
 
-          // HEADER: NAMA HARI
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Row(
@@ -241,7 +190,6 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
             ),
           ),
 
-          // GRID TANGGAL
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator(color: primaryColor))
@@ -281,9 +229,11 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
 
         bool isToday = false;
         final now = DateTime.now();
-        if (_currentDate.month == now.month &&
-            _currentDate.year == now.year &&
-            int.parse(data.gregorianDate.substring(0, 2)) == now.day) {
+        final targetDate = now;
+
+        if (_currentDate.month == targetDate.month &&
+            _currentDate.year == targetDate.year &&
+            int.parse(data.gregorianDate.substring(0, 2)) == targetDate.day) {
           isToday = true;
         }
 
