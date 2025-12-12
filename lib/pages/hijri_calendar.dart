@@ -20,6 +20,9 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
   String _errorMessage = '';
   bool _isLocaleReady = false;
 
+  final Color _accentPurple = const Color(0xFFAB47BC);
+  final Color _glowPurple = const Color(0xFF6C1B9B);
+
   @override
   void initState() {
     super.initState();
@@ -88,136 +91,201 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
     }
   }
 
+  BoxDecoration _getGlassyDecoration({
+    bool isToday = false,
+    double radius = 20,
+  }) {
+    return BoxDecoration(
+      color: isToday
+          ? _accentPurple.withOpacity(0.15)
+          : Colors.white.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: isToday
+            ? _accentPurple.withOpacity(0.5)
+            : Colors.white.withOpacity(0.1),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: isToday
+              ? _accentPurple.withOpacity(0.3)
+              : _glowPurple.withOpacity(0.1),
+          blurRadius: isToday ? 25 : 15,
+          spreadRadius: isToday ? 2 : 1,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBackground() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F0F0F), Color(0xFF2A0E36), Color(0xFF0F0F0F)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFF8A2BE2);
-    final Color backgroundColor = const Color(0xFF1E1E2C);
-    final Color cardColor = const Color(0xFF2D2D44);
+    final transparentAppBar = AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: const BackButton(color: Colors.white),
+      title: const Text(
+        "Kalender Islam",
+        style: TextStyle(color: Colors.white),
+      ),
+      centerTitle: true,
+    );
 
     if (!_isLocaleReady) {
       return Scaffold(
-        backgroundColor: backgroundColor,
-        appBar: AppBar(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
+        extendBodyBehindAppBar: true,
+        appBar: transparentAppBar,
+        body: Stack(
+          children: [
+            _buildBackground(),
+            Center(child: CircularProgressIndicator(color: _accentPurple)),
+          ],
         ),
-        body: Center(child: CircularProgressIndicator(color: primaryColor)),
       );
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Kalender Islam",
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
+      extendBodyBehindAppBar: true,
+      appBar: transparentAppBar,
+      body: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          _buildBackground(),
+
+          SafeArea(
+            child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.chevron_left,
-                    color: Colors.white,
-                    size: 30,
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 8,
                   ),
-                  onPressed: () => _changeMonth(-1),
-                ),
-                Column(
-                  children: [
-                    Text(
-                      DateFormat('MMMM yyyy', 'id_ID').format(_currentDate),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                  decoration: _getGlassyDecoration(),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        onPressed: () => _changeMonth(-1),
                       ),
-                    ),
-                    if (!_isLoading && _calendarData.isNotEmpty)
-                      Text(
-                        "${_calendarData.first.hijriMonth} - ${_calendarData.last.hijriMonth} ${_calendarData.first.hijriYear}",
-                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      Column(
+                        children: [
+                          Text(
+                            DateFormat(
+                              'MMMM yyyy',
+                              'id_ID',
+                            ).format(_currentDate),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (!_isLoading && _calendarData.isNotEmpty)
+                            Text(
+                              "${_calendarData.first.hijriMonth} - ${_calendarData.last.hijriMonth} ${_calendarData.first.hijriYear}",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                    size: 30,
+                      IconButton(
+                        icon: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        onPressed: () => _changeMonth(1),
+                      ),
+                    ],
                   ),
-                  onPressed: () => _changeMonth(1),
+                ),
+
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 5,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: _getGlassyDecoration(radius: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
+                        .map(
+                          (day) => Expanded(
+                            child: Center(
+                              child: Text(
+                                day,
+                                style: TextStyle(
+                                  color: day == "Jum"
+                                      ? _accentPurple
+                                      : Colors.white70,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+
+                Expanded(
+                  child: _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: _accentPurple,
+                          ),
+                        )
+                      : _errorMessage.isNotEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Text(
+                              _errorMessage,
+                              style: const TextStyle(color: Colors.redAccent),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      : _buildCalendarGrid(),
                 ),
               ],
             ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
-                  .map(
-                    (day) => Expanded(
-                      child: Center(
-                        child: Text(
-                          day,
-                          style: TextStyle(
-                            color: day == "Jum" ? primaryColor : Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-
-          Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: primaryColor))
-                : _errorMessage.isNotEmpty
-                ? Center(
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  )
-                : _buildCalendarGrid(cardColor, primaryColor),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCalendarGrid(Color cardColor, Color primaryColor) {
+  Widget _buildCalendarGrid() {
     int firstDayOffset = _getFirstDayOffset();
     int totalItemCount = _calendarData.length + firstDayOffset;
 
     return GridView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
       ),
       itemCount: totalItemCount,
       itemBuilder: (context, index) {
@@ -229,26 +297,20 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
 
         bool isToday = false;
         final now = DateTime.now();
-        final targetDate = now;
-
-        if (_currentDate.month == targetDate.month &&
-            _currentDate.year == targetDate.year &&
-            int.parse(data.gregorianDate.substring(0, 2)) == targetDate.day) {
+        if (_currentDate.month == now.month &&
+            _currentDate.year == now.year &&
+            int.parse(data.gregorianDate.substring(0, 2)) == now.day) {
           isToday = true;
         }
 
         return Container(
-          decoration: BoxDecoration(
-            color: isToday ? primaryColor.withOpacity(0.2) : cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: isToday ? Border.all(color: primaryColor, width: 2) : null,
-          ),
+          decoration: _getGlassyDecoration(isToday: isToday, radius: 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 data.gregorianDate.substring(0, 2),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -258,7 +320,7 @@ class _KalenderIslamPageState extends State<KalenderIslamPage> {
               Text(
                 data.hijriDate,
                 style: TextStyle(
-                  color: primaryColor,
+                  color: _accentPurple,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
